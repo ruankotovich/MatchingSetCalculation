@@ -22,11 +22,11 @@ struct MatchComparator_t{
 };
 
 unsigned int dedFromMatch(const Match_t& match, unsigned int i, unsigned int j){
-  return match.ed + std::max(i - match.i, j - match.j);
+  return match.ed + std::max((i - match.i), (j - match.j));
 }
 
 std::set<Match_t, MatchComparator_t> matchingSet(const std::string& q, const std::string s){
-  std::cout << "Building set for " << q << " and " << s << '\n';
+  // std::cout << "Building set for " << q << " and " << s << '\n';
   std::set<Match_t, MatchComparator_t> matchSet;
   matchSet.emplace(0,0,0);
 
@@ -37,33 +37,41 @@ std::set<Match_t, MatchComparator_t> matchingSet(const std::string& q, const std
 
     // for each m' = {i', k', ed'} € M(q_i-1, s)
     for(auto match : matchSet){
-
+      // std::cout << "\n\nUsing match " << match.i << ',' << match.j << ':' << match.ed << '\n';
       // for each j > j' s.t. q[i] = s[j]
       for(int j = match.j+1; j < s.size(); j++){
-
+        // std::cout << i << ',' << j << '\n';
         if(q[i] == s[j]){
-          std::cout << "Match on q" << i << " and s" << j << '\n';
+          // std::cout << "Match on q" << i << " and s" << j << '\n';
 
           unsigned int newDed = dedFromMatch(match, i-1, j-1);
           auto currentMatchSet_iterator = currentMatchSet.emplace(i, j, newDed);
 
           if(!currentMatchSet_iterator.second){
-            std::cout << "There was a entry on the set : " << currentMatchSet_iterator.first->ed << '\n';
+            // std::cout << "There was a entry on the set : " << currentMatchSet_iterator.first->ed << '\n';
             if(currentMatchSet_iterator.first->ed > newDed){
-              std::cout << "Replaced by " << newDed << '\n';
+              // std::cout << "Replaced by " << newDed << '\n';
               currentMatchSet_iterator.first->ed = newDed;
-            }else{
-              std::cout << "Not replaced\n";
             }
-          }else{
-            std::cout << "Inserted with " << newDed << '\n';
+            // else{
+            //   std::cout << "Not replaced\n";
+            // }
           }
+          // }else{
+          // std::cout << "Inserted with " << newDed << '\n';
+          // }
 
         }
       }
+
     }
 
-    matchSet.insert(currentMatchSet.begin(), currentMatchSet.end());
+    for(auto match : currentMatchSet){
+      auto matchSetIterator = matchSet.emplace(match.i, match.j, match.ed);
+      if(!matchSetIterator.second){
+        matchSetIterator.first->ed = match.ed;
+      }
+    }
 
   }
 
@@ -76,10 +84,10 @@ int main(){
   std::cin >> s1 >> s2;
   s1 = "#"+s1;
   s2 = "#"+s2;
-  
+
   std::set<Match_t, MatchComparator_t> testSet = matchingSet(s1, s2);
 
   for(auto item : testSet){
-    std::cout << item.i << ' ' << item.j << ' ' << item.ed << '\n';
+    std::cout << item.i << ' ' << item.j << ' ' << item.ed << " / EED : " << dedFromMatch(item, s1.size(), s2.size()) - 1 << '\n';
   }
 }
